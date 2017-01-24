@@ -1,0 +1,30 @@
+﻿Klient:
+
+	Podzielony na 2 procesy. Jeden w pętli nieskończonej wysyła rozkazy
+(1 - atak, 2 - budowa lekkich jednostek, 3 - budowa ciężkich jednostek, 4 - budowa jazdy, 5 - budowa robotników). Drugi w pętli nieskończonej odbiera wiadomości nadane przez serwer i wyświetla na ekranie informacje o aktualnym stanie naszych zasobów oraz o wyniku gry.
+
+
+Serwer:
+
+	Podczas rozpoczęcia pracy tworzy kolejki komunikatów, pamięć współdzieloną oraz semafory. Odbiera od graczy wiadomość o chęci rozpoczęcia gry, a następnie nadaje i wysyła graczom ich numery. Ten program również składa się z dwóch głównych procesów: pierwszy przyjmuje wiadomości z numerami rozkazów od graczy, drugi dodaje graczom złoto i sprawdza czy któryś z graczy nie odniósł zwycięstwa. 
+	
+	Budowa: Aby rozpocząć budowę serwer sprawdza ilość złota potrzebną do rekrutacji danej jednostki. Jeśli ilość złota jest za mała następuje zmiana wartości informacji na 5 (co klient interpretuje jako brak zasobów). Jeśli mamy wystarczającą ilość zasobów jednostka jest budowana. Sam mechanizm przebiega w następujący spasób:
+Stworzenie nowego procesu, opuszczenie semafora stanu w i pobranie z pamięci współdzielonej ilości naszych zasobów, opuszczenie semafora, sprawdzenie czy mamy odpowiednią ilość złota. Jeśli tak: opuszczamy semafory: do budowy oraz stanu, kopiujemy z pamięci współdzielonej wartości naszych zasobów, odejmujemy potrzebną ilość złota, zapisujemy do pamięci aktualny stan, podnosimy oba semafory, czekamy, ponownie opuszczamy semafory, kopiujemy z pamięci aktualny stan, dodajmy jednostkę kopiujemy do pamięci stan z dodaną jednostką, podnosimy semafory.
+
+	Walka: Tworzony jest nowy proces, w którym na początku sprawdzamy czy gracz nie wysłał żadnej jednostki. Jeśli tak przerywamy wykonywanie. W przeciwnym wypadku opuszczamy semafor stanu i z pamięci współdzielonej pobieramy aktualny stan. Sprawdzamy czy ilość wojska wysłana przez gracza nie jest większa od posiadanej przez niego, jeśli ta jest większa wysyłamy maksymalną możliwą ilość. Zapisujemy do pamięci aktualny stan bez części wojsk, podnosimy semafor stanu i czekamy. Opuszczamy semafor drugiego gracza kopiujemy z pamięci jego stan, a następnie wykonujemy funkcję walka. Jako argumenty przekazujemy do niej ilość wojska wysłanego przez pierwszego gracza, ilość wojsk w zamku broniącego się, dodatkową zmienną pozwalającą pkt(1 lub 2 w zależności, który gracz atakuje) oraz wynik znajdujący się aktualnie w strukturze stan broniącego się gracza. W samej funkcji liczone są zdolności ataku oraz obrony oby graczy. Jeśli zdolność ataku atakującego przewyższa zdolność obrony broniącego dodawany jest punkt dla gracza atakującego. Dodatkowo obliczane są straty jakie poniósł atakujący i broniący. Po walce kopiujemy aktualny stan gracza drugiego do jego pamięci współdzielonej i podnosimy semafor stanu. Następnie opuszczamy semafor stanu pierwszego gracza, pobieramy jego aktualny stan, dodajemy punkt jeśli wygrał, dodajemy ilość jednostek, które powróciły. kopiujemy stan do pamięci i podnosimy semafor stanu.
+
+	Do funkcji podnoszenia i opuszczania semaforów przekazywane jest wyłącznie ich id. Każdy z semaforów jest pojedynczy, dlatego w samych funkcjach "sem_num" może zawsze przyjmować wartość 0.
+	
+
+Jak grać?
+
+	Aby rozpocząć grę uruchamiamy serwer. Następnie obu klientów. Na ekranie wyświetlany jest nasz aktualny stan. Podstawowe komendy, które wydajemy zostały opisane w części KLIENT. Dodatkowo, wysyłając atak musimy podać ilość wysyłanych jednostek w formacie "ilość_lekkiej<SPACJA> ilość_ciężkiej<SPACJA> ilość_jazdy". Jeśli, któryś z graczy zdobędzie 5 punktów na ekranie zostanie wyświetlona porażka bądź przegrana.
+
+Kompilacja i odpalenie gry:
+
+	Najpierw kompilacja za pomocą skryptu skrypt.sh, następnie włączamy serwer komendą "sudo ./s.out" i oba klienty "sudo ./k.out".
+
+
+
+	Dobrej zabawy! :)
+
